@@ -23,19 +23,21 @@ public class DbUser : IdentityUser
 
     public DbUser(User user) : base()
     {
+        Id = user.Guid.ToString();
         Firstname = user.Firstname;
         Lastname = user.Lastname;
         Email = user.Email;
         UserName = Email;
     }
 
-    public User ToDomainUser()
+    public User ToDomainUser(List<Role> roles)
     {
         return new User(
             Guid.Parse(Id),
             Firstname,
             Lastname,
-            Email
+            Email,
+            roles
         );
     }
 }

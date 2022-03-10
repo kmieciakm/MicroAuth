@@ -9,12 +9,14 @@ public class AuthenticationService : IAuthenticationService
 {
     private IUserRegistry _UserRepository { get; }
     private ITokenService _TokenService { get; }
+    private IAuthorizationService _AuthorizationService { get; }
 
     public AuthenticationService(
-        IUserRegistry userRepository, ITokenService tokenService)
+        IUserRegistry userRepository, ITokenService tokenService, IAuthorizationService authorizationService)
     {
         _UserRepository = userRepository;
         _TokenService = tokenService;
+        _AuthorizationService = authorizationService;
     }
 
     public Task<User?> GetIdentityAsync(string email)
@@ -46,7 +48,7 @@ public class AuthenticationService : IAuthenticationService
         }
 
         var user = await _UserRepository.GetAsync(signUp.Email);
-        if (user != null)
+        if (user is not null)
         {
             throw new RegistrationException(
                 $"Cannot register new user. Given Email: {signUp.Email} is already used.",
@@ -77,11 +79,13 @@ public class AuthenticationService : IAuthenticationService
         );
 
         var createdSuccessfully = await _UserRepository.CreateAsync(newUser, signUp.Password);
-
         if (!createdSuccessfully)
         {
             throw new RegistrationException("User registration failed unexpectedly.");
         }
+
+        await _AuthorizationService.AssignDefaultRoles(newUser.Guid);
+
         return await _UserRepository.GetAsync(signUp.Email);
     }
 }

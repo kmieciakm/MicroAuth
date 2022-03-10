@@ -1,22 +1,18 @@
 ﻿namespace Domain.Exceptions;
 
-public class AuthenticationException : Exception
+public class AuthenticationException : ExplainedException
 {
-    public ExceptionCause Cause { get; }
-
     public AuthenticationException()
     {
     }
 
     public AuthenticationException(string message, ExceptionCause cause = ExceptionCause.Unknown)
-        : base(message)
+        : base(message, cause)
     {
-        Cause = cause;
     }
 
     public AuthenticationException(string message, Exception innerException, ExceptionCause cause = ExceptionCause.Unknown)
-        : base(message, innerException)
+        : base(message, innerException, cause)
     {
-        Cause = cause;
     }
 }

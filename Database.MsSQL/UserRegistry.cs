@@ -18,17 +18,16 @@ public class UserRegistry : IUserRegistry
 
     public async Task<User?> GetAsync(Guid id)
     {
-        var dbUser = await _UserManager
-            .Users
-            .FirstOrDefaultAsync(user => user.Id == id.ToString());
-
-        return dbUser?.ToDomainUser();
+        var dbUser = await GetDbUserByIdAsync(id);
+        var roles = await GetUserRoles(dbUser);
+        return dbUser?.ToDomainUser(roles);
     }
 
     public async Task<User?> GetAsync(string email)
     {
         var dbUser = await GetDbUserByEmailAsync(email);
-        return dbUser?.ToDomainUser();
+        var roles = await GetUserRoles(dbUser);
+        return dbUser?.ToDomainUser(roles);
     }
 
     private async Task<DbUser?> GetDbUserByIdAsync(Guid id)
@@ -45,18 +44,32 @@ public class UserRegistry : IUserRegistry
             .FirstOrDefaultAsync(user => user.Email == email);
     }
 
+    private async Task<List<Role>> GetUserRoles(DbUser? dbUser)
+    {
+        if (dbUser is null) return new();
+        var roleList = await _UserManager.GetRolesAsync(dbUser);
+        return roleList
+            .Select(r => new Role(r))
+            .ToList();
+    }
+
+    public async Task<bool> CheckExistsAsync(Guid userId)
+    {
+        return await _UserManager
+            .FindByIdAsync(userId.ToString()) is not null;
+    }
+
     public async Task<bool> CreateAsync(User user, string password)
     {
         var dbUser = new DbUser(user);
         var result = await _UserManager.CreateAsync(dbUser, password);
-
         return result.Succeeded;
     }
 
     public async Task<bool> AuthenticateAsync(string email, string password)
     {
         var user = await GetDbUserByEmailAsync(email);
-        if (user == null)
+        if (user is null)
         {
             return false;
         }
@@ -84,10 +97,20 @@ public class UserRegistry : IUserRegistry
         return validationResult;
     }
 
+    public async Task AddToRoleAsync(Guid userId, Role role)
+    {
+        var dbUser = await GetDbUserByIdAsync(userId);
+        if (dbUser is null)
+        {
+            throw new ArgumentException($"No user with id '{userId}' found.");
+        }
+        await _UserManager.AddToRoleAsync(dbUser, role.Name);
+    }
+
     public async Task DeleteAsync(Guid id)
     {
         var dbUser = await GetDbUserByIdAsync(id);
-        if (dbUser != null)
+        if (dbUser is not null)
         {
             await _UserManager.DeleteAsync(dbUser);
         }

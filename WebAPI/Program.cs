@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
+using IAuthorizationService = Domain.Contracts.IAuthorizationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,20 +66,25 @@ builder.Services.AddDbContext<AuthDbContext>(options => {
 });
 
 builder.Services.AddScoped<IUserRegistry, UserRegistry>();
+builder.Services.AddScoped<IRoleRegistry, RoleRegistry>();
 
 // Settings
 builder.Services.Configure<AuthenticationSettings>(
     builder.Configuration.GetSection("AuthenticationSettings"));
+builder.Services.Configure<AuthorizationSettings>(
+    builder.Configuration.GetSection("AuthorizationSettings"));
 
 // Domain services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 // Authentication
 builder.Services.AddAuthorization();
 AddTokenAuthentication(builder.Services, builder.Configuration);
 
+// Build Applcation
 var app = builder.Build();
 
 app.UseAuthentication();
@@ -110,7 +116,8 @@ app.MapPost("/identity", [Authorize] async (IAuthenticationService authenticatio
     return Results.Ok(user);
 });
 
-app.MapPost("/login", [AllowAnonymous] async ([FromBody] SignInRequest signIn, IAuthenticationService authenticationService) =>
+app.MapPost("/login", [AllowAnonymous] async ([FromBody] SignInRequest signIn,
+    IAuthenticationService authenticationService) =>
 {
     try
     {
@@ -127,7 +134,8 @@ app.MapPost("/login", [AllowAnonymous] async ([FromBody] SignInRequest signIn, I
     }
 });
 
-app.MapPost("/register", [AllowAnonymous] async ([FromBody] SignUpRequest signUp, IAuthenticationService authenticationService) =>
+app.MapPost("/register", [AllowAnonymous] async ([FromBody] SignUpRequest signUp,
+    IAuthenticationService authenticationService) =>
 {
     try
     {
@@ -140,6 +148,29 @@ app.MapPost("/register", [AllowAnonymous] async ([FromBody] SignUpRequest signUp
     }
 });
 
+app.MapPost("/user/{userId}/role", [Authorize] async (Guid userId, [FromBody] string roleName,
+    IAuthorizationService authorizationService, IAuthenticationService authenticationService, IHttpContextAccessor httpContextAccessor) =>
+{
+    try
+    {
+        var role = new Role(roleName);
+        var currentUser = await GetLoggedInUserAsync(httpContextAccessor, authenticationService);
+        if (currentUser is not null && await authorizationService.CanManageRoles(currentUser.Guid))
+        {
+            await authorizationService.AssignRoleAsync(role, userId);
+            return Results.Ok();
+        };
+        return Results.Unauthorized();
+    }
+    catch (AuthorizationException authEx) when (authEx.Cause == ExceptionCause.IncorrectData)
+    {
+        return Results.BadRequest(new { authEx.Message });
+    }
+});
+
+await AddPredefinedRoles(app);
+
+// Run Application
 app.Run();
 
 static IServiceCollection AddTokenAuthentication(IServiceCollection services, IConfiguration configuration)
@@ -164,4 +195,19 @@ static IServiceCollection AddTokenAuthentication(IServiceCollection services, IC
             };
         });
     return services;
+}
+
+static async Task<WebApplication> AddPredefinedRoles(WebApplication app)
+{
+    using var scopeServices = app.Services.CreateScope();
+    var authorizationService = scopeServices.ServiceProvider.GetRequiredService<IAuthorizationService>();
+    await authorizationService.AddPredefinedRolesAsync();
+    return app;
+}
+
+async Task<User?> GetLoggedInUserAsync(IHttpContextAccessor httpAccessor, IAuthenticationService authenticationService)
+{
+    ClaimsPrincipal? userClaims = httpAccessor.HttpContext?.User;
+    string email = userClaims.FindFirstValue(ClaimTypes.Email);
+    return await authenticationService.GetIdentityAsync(email);
 }
