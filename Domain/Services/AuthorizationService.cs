@@ -13,7 +13,8 @@ public class AuthorizationService : IAuthorizationService
     private AuthorizationSettings _AuthorizationSettings { get; }
 
     public AuthorizationService(
-        IUserRegistry userRepository, IRoleRegistry roleRegistry,
+        IUserRegistry userRepository,
+        IRoleRegistry roleRegistry,
         IOptions<AuthorizationSettings> authorizationSettings)
     {
         _UserRepository = userRepository;

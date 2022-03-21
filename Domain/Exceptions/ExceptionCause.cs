@@ -3,5 +3,6 @@
 public enum ExceptionCause : short
 {
     Unknown,
-    IncorrectData
+    IncorrectData,
+    SystemConfiguration
 }

@@ -4,5 +4,5 @@ namespace Domain.Contracts;
 
 public interface ITokenService
 {
-    Token GenerateSecurityToken(string email);
+    Token GenerateSecurityToken(Claims claims);
 }

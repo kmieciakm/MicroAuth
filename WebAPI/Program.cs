@@ -146,6 +146,10 @@ app.MapPost("/register", [AllowAnonymous] async ([FromBody] SignUpRequest signUp
     {
         return Results.BadRequest(new { registerEx.Message, registerEx.Details });
     }
+    catch (RegistrationException registerEx) when (registerEx.Cause == ExceptionCause.SystemConfiguration)
+    {
+        return Results.Unauthorized();
+    }
 });
 
 app.MapPost("/user/{userId}/role", [Authorize] async (Guid userId, [FromBody] string roleName,

@@ -17,17 +17,14 @@ public class TokenService : ITokenService
         _AuthenticationSettings = authenticationSettings.Value;
     }
 
-    public Token GenerateSecurityToken(string email)
+    public Token GenerateSecurityToken(Claims claims)
     {
         JwtSecurityTokenHandler tokenHandler = new();
         var key = Encoding.UTF8.GetBytes(_AuthenticationSettings.Secret);
 
         SecurityTokenDescriptor tokenDescriptor = new()
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Email, email)
-            }),
+            Subject = GetClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(_AuthenticationSettings.ExpirationHours),
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key),
@@ -39,8 +36,24 @@ public class TokenService : ITokenService
 
         var securityToken = tokenHandler.CreateToken(tokenDescriptor);
 
-        return new Token() {
+        return new Token()
+        {
             JWT = tokenHandler.WriteToken(securityToken)
         };
+    }
+
+    private static ClaimsIdentity GetClaimsIdentity(Claims claims)
+    {
+        List<Claim> claimsList = new()
+        {
+            new Claim(ClaimTypes.Email, claims.Email)
+        };
+        foreach (var role in claims.Roles)
+        {
+            claimsList.Add(
+                new Claim(ClaimTypes.Role, role.Name));
+        }
+
+        return new ClaimsIdentity(claimsList);
     }
 }

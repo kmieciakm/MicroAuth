@@ -79,7 +79,7 @@ public class UserRegistry : IUserRegistry
 
     public async Task<ValidationResult> ValidatePasswordAsync(string password)
     {
-        ValidationResult validationResult = new();
+        ValidationResult validationResult = new() { IsValid = true, Errors = new() };
         foreach (var validator in _UserManager.PasswordValidators)
         {
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.

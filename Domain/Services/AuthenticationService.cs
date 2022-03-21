@@ -2,6 +2,7 @@
 using Domain.Exceptions;
 using Domain.Infrastructure;
 using Domain.Models;
+using Microsoft.Extensions.Options;
 
 namespace Domain.Services;
 
@@ -10,10 +11,15 @@ public class AuthenticationService : IAuthenticationService
     private IUserRegistry _UserRepository { get; }
     private ITokenService _TokenService { get; }
     private IAuthorizationService _AuthorizationService { get; }
+    private AuthenticationSettings _AuthenticationSettings { get; }
 
     public AuthenticationService(
-        IUserRegistry userRepository, ITokenService tokenService, IAuthorizationService authorizationService)
+        IOptions<AuthenticationSettings> authenticationOptions,
+        IUserRegistry userRepository,
+        ITokenService tokenService,
+        IAuthorizationService authorizationService)
     {
+        _AuthenticationSettings = authenticationOptions.Value;
         _UserRepository = userRepository;
         _TokenService = tokenService;
         _AuthorizationService = authorizationService;
@@ -27,7 +33,6 @@ public class AuthenticationService : IAuthenticationService
     public async Task<Token> SignInAsync(SignInRequest signIn)
     {
         var authenticated = await _UserRepository.AuthenticateAsync(signIn.Email, signIn.Password);
-
         if (!authenticated)
         {
             throw new AuthenticationException(
@@ -35,11 +40,27 @@ public class AuthenticationService : IAuthenticationService
                 ExceptionCause.IncorrectData);
         }
 
-        return _TokenService.GenerateSecurityToken(signIn.Email);
+        var user = await _UserRepository.GetAsync(signIn.Email);
+        if (user is null)
+        {
+            throw new AuthenticationException(
+                "There is no user associated with given email address.",
+                ExceptionCause.IncorrectData);
+        }
+
+        var claims = new Claims()
+        {
+            Email = user.Email,
+            Roles = user.Roles
+        };
+
+        return _TokenService.GenerateSecurityToken(claims);
     }
 
     public async Task<User> SignUpAsync(SignUpRequest signUp)
     {
+        EnsureOpenRegistration();
+
         if (!Validator.IsValidEmail(signUp.Email))
         {
             throw new RegistrationException(
@@ -87,5 +108,16 @@ public class AuthenticationService : IAuthenticationService
         await _AuthorizationService.AssignDefaultRoles(newUser.Guid);
 
         return await _UserRepository.GetAsync(signUp.Email);
+    }
+
+    private void EnsureOpenRegistration()
+    {
+        var isOpen = _AuthenticationSettings.OpenRegistration;
+        if (!isOpen)
+        {
+            throw new RegistrationException(
+                "The registration is prohibited.",
+                ExceptionCause.SystemConfiguration);
+        }
     }
 }
