@@ -107,6 +107,16 @@ public class UserRegistry : IUserRegistry
         await _UserManager.AddToRoleAsync(dbUser, role.Name);
     }
 
+    public async Task RemoveFromRoleAsync(Guid userId, Role role)
+    {
+        var dbUser = await GetDbUserByIdAsync(userId);
+        if (dbUser is null)
+        {
+            throw new ArgumentException($"No user with id '{userId}' found.");
+        }
+        await _UserManager.RemoveFromRoleAsync(dbUser, role.Name);
+    }
+
     public async Task DeleteAsync(Guid id)
     {
         var dbUser = await GetDbUserByIdAsync(id);

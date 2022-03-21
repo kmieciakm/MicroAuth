@@ -11,13 +11,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Security.Claims;
 using System.Text;
 using IAuthorizationService = Domain.Contracts.IAuthorizationService;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers();
 builder.Services.AddSwaggerGen(c =>
 {
     var securityScheme = new OpenApiSecurityScheme
@@ -98,25 +98,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapPost("/identity", [Authorize] async (IAuthenticationService authenticationService, IHttpContextAccessor httpAccessor) =>
-{
-    ClaimsPrincipal? userClaims = httpAccessor.HttpContext?.User;
-    string email = userClaims.FindFirstValue(ClaimTypes.Email);
-    if (email.IsNullOrEmpty())
-    {
-        return Results.Unauthorized();
-    }
+app.MapControllers();
 
-    var user = await authenticationService.GetIdentityAsync(email);
-    if (user == null)
-    {
-        return Results.NotFound();
-    }
-
-    return Results.Ok(user);
-});
-
-app.MapPost("/login", [AllowAnonymous] async ([FromBody] SignInRequest signIn,
+app.MapPost("api/login", [AllowAnonymous] async ([FromBody] SignInRequest signIn,
     IAuthenticationService authenticationService) =>
 {
     try
@@ -134,7 +118,7 @@ app.MapPost("/login", [AllowAnonymous] async ([FromBody] SignInRequest signIn,
     }
 });
 
-app.MapPost("/register", [AllowAnonymous] async ([FromBody] SignUpRequest signUp,
+app.MapPost("api/register", [AllowAnonymous] async ([FromBody] SignUpRequest signUp,
     IAuthenticationService authenticationService) =>
 {
     try
@@ -149,26 +133,6 @@ app.MapPost("/register", [AllowAnonymous] async ([FromBody] SignUpRequest signUp
     catch (RegistrationException registerEx) when (registerEx.Cause == ExceptionCause.SystemConfiguration)
     {
         return Results.Unauthorized();
-    }
-});
-
-app.MapPost("/user/{userId}/role", [Authorize] async (Guid userId, [FromBody] string roleName,
-    IAuthorizationService authorizationService, IAuthenticationService authenticationService, IHttpContextAccessor httpContextAccessor) =>
-{
-    try
-    {
-        var role = new Role(roleName);
-        var currentUser = await GetLoggedInUserAsync(httpContextAccessor, authenticationService);
-        if (currentUser is not null && await authorizationService.CanManageRoles(currentUser.Guid))
-        {
-            await authorizationService.AssignRoleAsync(role, userId);
-            return Results.Ok();
-        };
-        return Results.Unauthorized();
-    }
-    catch (AuthorizationException authEx) when (authEx.Cause == ExceptionCause.IncorrectData)
-    {
-        return Results.BadRequest(new { authEx.Message });
     }
 });
 
@@ -207,11 +171,4 @@ static async Task<WebApplication> AddPredefinedRoles(WebApplication app)
     var authorizationService = scopeServices.ServiceProvider.GetRequiredService<IAuthorizationService>();
     await authorizationService.AddPredefinedRolesAsync();
     return app;
-}
-
-async Task<User?> GetLoggedInUserAsync(IHttpContextAccessor httpAccessor, IAuthenticationService authenticationService)
-{
-    ClaimsPrincipal? userClaims = httpAccessor.HttpContext?.User;
-    string email = userClaims.FindFirstValue(ClaimTypes.Email);
-    return await authenticationService.GetIdentityAsync(email);
 }

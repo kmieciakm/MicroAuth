@@ -75,6 +75,25 @@ public class AuthorizationService : IAuthorizationService
         await _UserRepository.AddToRoleAsync(userId, role);
     }
 
+    public async Task ReclaimRoleAsync(Role role, Guid userId)
+    {
+        await EnsureUserExists(userId);
+        await EnsureRoleExists(role);
+
+        var isDefaultRole = _AuthorizationSettings
+            .DefaultRoles
+            .Contains(role.Name);
+
+        if (isDefaultRole)
+        {
+            throw new AuthorizationException(
+                $"Cannot reclaim role '{role.Name}'. It is a default role.",
+                ExceptionCause.IncorrectData);
+        }
+
+        await _UserRepository.RemoveFromRoleAsync(userId, role);
+    }
+
     private async Task EnsureRoleExists(Role role)
     {
         if (!await _RoleRepository.CheckExistsAsync(role))

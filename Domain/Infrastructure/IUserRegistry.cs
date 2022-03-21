@@ -11,5 +11,6 @@ public interface IUserRegistry
     Task<bool> AuthenticateAsync(string email, string password);
     Task<ValidationResult> ValidatePasswordAsync(string password);
     Task AddToRoleAsync(Guid userId, Role role);
+    Task RemoveFromRoleAsync(Guid userId, Role role);
     Task DeleteAsync(Guid id);
 }
