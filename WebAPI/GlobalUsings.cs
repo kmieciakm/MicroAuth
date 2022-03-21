@@ -1,0 +1,1 @@
+﻿global using Authorize = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;

@@ -8,9 +8,9 @@ namespace WebAPI.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [UserCanManageRoles]
-public class RoleController : IdentityControllerBase
+public class RolesController : IdentityControllerBase
 {
-    public RoleController(
+    public RolesController(
         IAuthorizationService authorizationService,
         IAuthenticationService authenticationService,
         IHttpContextAccessor httpContextAccessor)
@@ -34,5 +34,13 @@ public class RoleController : IdentityControllerBase
         {
             return BadRequest(new { authEx.Message });
         }
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetRoles()
+    {
+        var roles = await _AuthorizationService.GetAvailableRolesAsync();
+        return Ok(roles);
     }
 }

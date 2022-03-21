@@ -113,4 +113,9 @@ public class AuthorizationService : IAuthorizationService
                 ExceptionCause.IncorrectData);
         }
     }
+
+    public async Task<IEnumerable<Role>> GetAvailableRolesAsync()
+    {
+        return await _RoleRepository.GetRolesAsync();
+    }
 }

@@ -7,9 +7,9 @@ namespace WebAPI.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class UserController : IdentityControllerBase
+public class UsersController : IdentityControllerBase
 {
-    public UserController(
+    public UsersController(
         IAuthorizationService authorizationService,
         IAuthenticationService authenticationService,
         IHttpContextAccessor httpContextAccessor)
@@ -21,7 +21,7 @@ public class UserController : IdentityControllerBase
     }
 
     [HttpGet("")]
-    [Microsoft.AspNetCore.Authorization.Authorize]
+    [Authorize]
     public IActionResult GetIdentity()
     {
         if (CurrentUser == null)
@@ -32,8 +32,8 @@ public class UserController : IdentityControllerBase
     }
 
     [HttpPost("{userId}/role")]
+    [Authorize]
     [UserCanManageRoles]
-    [Microsoft.AspNetCore.Authorization.Authorize]
     public async Task<IActionResult> AddRoleToUser(Guid userId, [FromBody] string roleName)
     {
         try
@@ -49,8 +49,8 @@ public class UserController : IdentityControllerBase
     }
 
     [HttpDelete("{userId}/role")]
+    [Authorize]
     [UserCanManageRoles]
-    [Microsoft.AspNetCore.Authorization.Authorize]
     public async Task<IActionResult> DeleteRoleFromUser(Guid userId, [FromBody] string roleName)
     {
         try

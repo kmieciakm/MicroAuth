@@ -10,4 +10,5 @@ public interface IAuthorizationService
     Task<bool> CanManageRoles(Guid userId);
     Task AssignRoleAsync(Role role, Guid userId);
     Task ReclaimRoleAsync(Role role, Guid userId);
+    Task<IEnumerable<Role>> GetAvailableRolesAsync();
 }

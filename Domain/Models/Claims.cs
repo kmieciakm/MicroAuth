@@ -1,3 +1,6 @@
 ﻿namespace Domain.Models;
 
-public record struct Claims(string Email, IEnumerable<Role> Roles);
+public record struct Claims(
+    string Email,
+    IEnumerable<Role> Roles
+);
