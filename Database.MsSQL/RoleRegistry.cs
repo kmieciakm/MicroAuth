@@ -24,11 +24,15 @@ public class RoleRegistry : IRoleRegistry
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Role>> GetUserAssignedRolesAsync(User user)
+    public async Task<IEnumerable<Role>> GetUserAssignedRolesAsync(Guid id)
     {
-        DbUser dbUser = new(user);
-        var roles = await _UserManager.GetRolesAsync(dbUser);
-        return roles.Select(r => new Role(r));
+        DbUser? dbUser = await GetDbUserByIdAsync(id);
+        if (dbUser is not null)
+        {
+            var roles = await _UserManager.GetRolesAsync(dbUser);
+            return roles.Select(r => new Role(r));
+        }
+        return null;
     }
 
     public async Task<bool> CheckExistsAsync(Role role)
@@ -50,5 +54,12 @@ public class RoleRegistry : IRoleRegistry
             DbRole dbRole = new() { Name = role.Name };
             await _RoleManager.DeleteAsync(dbRole);
         }
+    }
+
+    private async Task<DbUser?> GetDbUserByIdAsync(Guid id)
+    {
+        return await _UserManager
+            .Users
+            .FirstOrDefaultAsync(user => user.Id == id.ToString());
     }
 }

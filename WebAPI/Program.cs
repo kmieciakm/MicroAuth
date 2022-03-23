@@ -44,7 +44,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Database setup
+// MS SQL Database setup
 var identityBuilder = builder.Services.AddIdentityCore<DbUser>(opt =>
 {
     opt.User.RequireUniqueEmail = true;
@@ -68,8 +68,15 @@ builder.Services.AddDbContext<AuthDbContext>(options => {
         builder.Configuration.GetConnectionString("SqlServer"));
 });
 
-builder.Services.AddScoped<IUserRegistry, UserRegistry>();
-builder.Services.AddScoped<IRoleRegistry, RoleRegistry>();
+// Azure Table Storage setup
+builder.Services.Configure<AzureTables.AzureStorageSettings>(
+    builder.Configuration.GetSection("AzureStorageSettings"));
+
+builder.Services.AddSingleton<Database.AzureTables.IUsersRolesTable, Database.AzureTables.UsersRolesTable>();
+builder.Services.AddSingleton<Database.AzureTables.IRoleTable, Database.AzureTables.RolesTable>();
+builder.Services.AddSingleton<Database.AzureTables.IUserTable, Database.AzureTables.UsersTable>();
+builder.Services.AddScoped<IUserRegistry, Database.AzureTables.UserRegistry>();
+builder.Services.AddScoped<IRoleRegistry, Database.AzureTables.RoleRegistry>();
 
 // Settings
 builder.Services.Configure<AuthenticationSettings>(
