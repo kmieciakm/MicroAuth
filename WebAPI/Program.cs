@@ -15,6 +15,9 @@ using System.Text;
 using IAuthorizationService = Domain.Contracts.IAuthorizationService;
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration
+    .AddUserSecrets<Program>()
+    .Build();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
