@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
@@ -21,6 +22,7 @@ var config = builder.Configuration
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
+builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddSwaggerGen(c =>
 {
     var securityScheme = new OpenApiSecurityScheme
@@ -45,6 +47,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // MS SQL Database setup
+/*
 var identityBuilder = builder.Services.AddIdentityCore<DbUser>(opt =>
 {
     opt.User.RequireUniqueEmail = true;
@@ -67,6 +70,7 @@ builder.Services.AddDbContext<AuthDbContext>(options => {
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("SqlServer"));
 });
+*/
 
 // Azure Table Storage setup
 builder.Services.Configure<AzureTables.AzureStorageSettings>(

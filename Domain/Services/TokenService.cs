@@ -53,7 +53,23 @@ public class TokenService : ITokenService
             claimsList.Add(
                 new Claim(ClaimTypes.Role, role.Name));
         }
-
         return new ClaimsIdentity(claimsList);
+    }
+
+    public async Task<bool> ValidateTokenAsync(Token token)
+    {
+        byte[] secretKey = Encoding.ASCII.GetBytes(_AuthenticationSettings.Secret);
+        JwtSecurityTokenHandler tokenHandler = new();
+        TokenValidationParameters validationParams = new()
+        {
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidIssuer = _AuthenticationSettings.Issuer,
+            ValidAudience = _AuthenticationSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(secretKey)
+        };
+        TokenValidationResult result = await tokenHandler.ValidateTokenAsync(token.JWT, validationParams);
+        return result.IsValid;
     }
 }
