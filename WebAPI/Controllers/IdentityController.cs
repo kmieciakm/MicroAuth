@@ -1,7 +1,6 @@
 ﻿using Domain.Contracts;
 using Domain.Exceptions;
 using Domain.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Web.Controllers;

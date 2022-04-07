@@ -3,7 +3,7 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    "AuthenticationSettings_OpenRegistration": true,
+    "AuthenticationSettings_OpenRegistration": false,
     "AuthenticationSettings_Issuer": "TestIssuer",
     "AuthenticationSettings_Audience": "TestAudience",
     "AuthenticationSettings_Secret": null, // Add in User Secrets

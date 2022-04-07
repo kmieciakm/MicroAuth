@@ -27,12 +27,12 @@ public class Function1 : AuthorizedFunctionBase
 
     [FunctionName("Function1")]
     [OpenApiSecurity("bearer", SecuritySchemeType.ApiKey, In = OpenApiSecurityLocationType.Header, Name = "Authorization", BearerFormat = "JWT", Description = "Enter JWT Bearer token", Scheme = OpenApiSecuritySchemeType.Bearer)]
-    [OpenApiOperation(operationId: "Run", tags: new[] { "name" })]
+    [OpenApiOperation(operationId: "Hello", tags: new[] { "test" })]
     [OpenApiParameter(name: "name", In = ParameterLocation.Query, Required = true, Type = typeof(string), Description = "The **Name** parameter")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Forbidden, contentType: "text/plain", bodyType: typeof(string), Description = "Invalid authorization")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "text/plain", bodyType: typeof(string), Description = "Invalid authorization")]
     public async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "test/hello")] HttpRequest req)
     {
         try
         {

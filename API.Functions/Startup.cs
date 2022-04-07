@@ -62,7 +62,10 @@ internal class Startup : FunctionsStartup
                 nameof(Int32) => int.Parse(configValue),
                 _ => configValue
             };
-            property.SetValue(option, value, null);
+            if (value is not null)
+            {
+                property.SetValue(option, value, null);
+            }
         }
         return option;
     }
