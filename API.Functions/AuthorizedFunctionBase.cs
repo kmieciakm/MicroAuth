@@ -1,9 +1,9 @@
-﻿using Domain.Contracts;
+﻿using System;
+using Domain.Contracts;
 using Domain.Exceptions;
 using Domain.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Threading.Tasks;
 
 namespace API.Functions;
@@ -28,7 +28,13 @@ public abstract class AuthorizedFunctionBase
             throw new AuthenticationException("No Authorization header was present");
         }
 
-        Token token = new() { JWT = req.Headers[AuthenticationHeaderName] };
+        string jwt = req.Headers[AuthenticationHeaderName];
+        if (jwt.StartsWith("Bearer"))
+        {
+            jwt = jwt.Substring(7);
+        }
+
+        Token token = new() { JWT = jwt };
         if (await _TokenService.ValidateTokenAsync(token))
         {
             try
