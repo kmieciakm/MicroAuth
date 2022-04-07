@@ -20,140 +20,110 @@ var config = builder.Configuration
     .AddUserSecrets<Program>()
     .Build();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddControllers();
-builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-builder.Services.AddSwaggerGen(c =>
-{
-    var securityScheme = new OpenApiSecurityScheme
-    {
-        Name = "JWT Authentication",
-        Description = "Enter JWT Bearer token **_only_**",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        Reference = new OpenApiReference
-        {
-            Id = JwtBearerDefaults.AuthenticationScheme,
-            Type = ReferenceType.SecurityScheme
-        }
-    };
-    c.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {securityScheme, new string[] { }}
-    });
-});
+ConfigureServices(builder);
 
-// MS SQL Database setup
-/*
-var identityBuilder = builder.Services.AddIdentityCore<DbUser>(opt =>
-{
-    opt.User.RequireUniqueEmail = true;
-    opt.Password.RequireDigit = true;
-    opt.Password.RequireUppercase = true;
-    opt.Password.RequireLowercase = true;
-    opt.Password.RequireNonAlphanumeric = true;
-    opt.Password.RequiredLength = 8;
-});
-
-identityBuilder
-    .AddRoles<DbRole>()
-    .AddSignInManager<SignInManager<DbUser>>()
-    .AddRoleManager<RoleManager<DbRole>>()
-    .AddUserManager<UserManager<DbUser>>()
-    .AddEntityFrameworkStores<AuthDbContext>()
-    .AddDefaultTokenProviders();
-
-builder.Services.AddDbContext<AuthDbContext>(options => {
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("SqlServer"));
-});
-*/
-
-// Azure Table Storage setup
-builder.Services.Configure<AzureTables.AzureStorageSettings>(
-    builder.Configuration.GetSection("AzureStorageSettings"));
-
-builder.Services.AddSingleton<Database.AzureTables.IUsersRolesTable, Database.AzureTables.UsersRolesTable>();
-builder.Services.AddSingleton<Database.AzureTables.IRoleTable, Database.AzureTables.RolesTable>();
-builder.Services.AddSingleton<Database.AzureTables.IUserTable, Database.AzureTables.UsersTable>();
-builder.Services.AddScoped<IUserRegistry, Database.AzureTables.UserRegistry>();
-builder.Services.AddScoped<IRoleRegistry, Database.AzureTables.RoleRegistry>();
-
-// Settings
-builder.Services.Configure<AuthenticationSettings>(
-    builder.Configuration.GetSection("AuthenticationSettings"));
-builder.Services.Configure<AuthorizationSettings>(
-    builder.Configuration.GetSection("AuthorizationSettings"));
-
-// Domain services
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-
-// Authentication
-builder.Services.AddAuthorization();
-AddTokenAuthentication(builder.Services, builder.Configuration);
-
-// Build Applcation
 var app = builder.Build();
+await Configure(app);
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.Run();
 
-if (app.Environment.IsDevelopment())
+static void ConfigureServices(WebApplicationBuilder builder)
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddControllers();
+    builder.Services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+    builder.Services.AddSwaggerGen(c => {
+        var securityScheme = new OpenApiSecurityScheme
+        {
+            Name = "JWT Authentication",
+            Description = "Enter JWT Bearer token **_only_**",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            Reference = new OpenApiReference
+            {
+                Id = JwtBearerDefaults.AuthenticationScheme,
+                Type = ReferenceType.SecurityScheme
+            }
+        };
+        c.AddSecurityDefinition(securityScheme.Reference.Id, securityScheme);
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {securityScheme, new string[] { }}
+        });
+    });
+
+    // MS SQL Database setup
+    /*
+    var identityBuilder = builder.Services.AddIdentityCore<DbUser>(opt =>
+    {
+        opt.User.RequireUniqueEmail = true;
+        opt.Password.RequireDigit = true;
+        opt.Password.RequireUppercase = true;
+        opt.Password.RequireLowercase = true;
+        opt.Password.RequireNonAlphanumeric = true;
+        opt.Password.RequiredLength = 8;
+    });
+
+    identityBuilder
+        .AddRoles<DbRole>()
+        .AddSignInManager<SignInManager<DbUser>>()
+        .AddRoleManager<RoleManager<DbRole>>()
+        .AddUserManager<UserManager<DbUser>>()
+        .AddEntityFrameworkStores<AuthDbContext>()
+        .AddDefaultTokenProviders();
+
+    builder.Services.AddDbContext<AuthDbContext>(options => {
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString("SqlServer"));
+    });
+    */
+
+    // Azure Table Storage setup
+    builder.Services.Configure<AzureTables.AzureStorageSettings>(
+        builder.Configuration.GetSection("AzureStorageSettings"));
+
+    builder.Services.AddSingleton<Database.AzureTables.IUsersRolesTable, Database.AzureTables.UsersRolesTable>();
+    builder.Services.AddSingleton<Database.AzureTables.IRoleTable, Database.AzureTables.RolesTable>();
+    builder.Services.AddSingleton<Database.AzureTables.IUserTable, Database.AzureTables.UsersTable>();
+    builder.Services.AddScoped<IUserRegistry, Database.AzureTables.UserRegistry>();
+    builder.Services.AddScoped<IRoleRegistry, Database.AzureTables.RoleRegistry>();
+
+    // Settings
+    builder.Services.Configure<AuthenticationSettings>(
+        builder.Configuration.GetSection("AuthenticationSettings"));
+    builder.Services.Configure<AuthorizationSettings>(
+        builder.Configuration.GetSection("AuthorizationSettings"));
+
+    // Domain services
+    builder.Services.AddScoped<ITokenService, TokenService>();
+    builder.Services.AddScoped<IAccountService, AccountService>();
+    builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
+    builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+
+    // Authentication
+    builder.Services.AddAuthorization();
+    AddTokenAuthentication(builder.Services, builder.Configuration);
 }
 
-app.UseHttpsRedirection();
-
-app.MapControllers();
-
-app.MapPost("api/login", [AllowAnonymous] async ([FromBody] SignInRequest signIn,
-    IAuthenticationService authenticationService) =>
+static async Task<WebApplication> Configure(WebApplication app)
 {
-    try
-    {
-        var token = await authenticationService.SignInAsync(signIn);
-        return Results.Ok(token);
-    }
-    catch (AuthenticationException authEx) when (authEx.Cause == ExceptionCause.IncorrectData)
-    {
-        return Results.BadRequest(authEx.Message);
-    }
-    catch (AuthenticationException authEx) when (authEx.Cause == ExceptionCause.Unknown)
-    {
-        return Results.Problem(statusCode: 500, detail: authEx.Message);
-    }
-});
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-app.MapPost("api/register", [AllowAnonymous] async ([FromBody] SignUpRequest signUp,
-    IAuthenticationService authenticationService) =>
-{
-    try
+    if (app.Environment.IsDevelopment())
     {
-        var user = await authenticationService.SignUpAsync(signUp);
-        return Results.Ok(user);
+        app.UseSwagger();
+        app.UseSwaggerUI();
     }
-    catch (RegistrationException registerEx) when (registerEx.Cause == ExceptionCause.IncorrectData)
-    {
-        return Results.BadRequest(new { registerEx.Message, registerEx.Details });
-    }
-    catch (RegistrationException registerEx) when (registerEx.Cause == ExceptionCause.SystemConfiguration)
-    {
-        return Results.Unauthorized();
-    }
-});
 
-await AddPredefinedRoles(app);
+    app.UseHttpsRedirection();
+    app.MapControllers();
 
-// Run Application
-app.Run();
+    await AddPredefinedRoles(app);
+    return app;
+}
 
 static IServiceCollection AddTokenAuthentication(IServiceCollection services, IConfiguration configuration)
 {
@@ -164,8 +134,7 @@ static IServiceCollection AddTokenAuthentication(IServiceCollection services, IC
     services
         .Configure<AuthenticationSettings>(settingsSection)
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(authOptions =>
-        {
+        .AddJwtBearer(authOptions => {
             authOptions.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,

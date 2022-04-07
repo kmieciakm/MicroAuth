@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security.Claims;
 
-namespace WebAPI.Controllers;
+namespace API.Web.Controllers;
 
 [UserFilter]
 public class IdentityControllerBase : ControllerBase
@@ -52,7 +52,8 @@ public class IdentityControllerBase : ControllerBase
             var controller = context.Controller as IdentityControllerBase;
             var email = controller?.User.FindFirst(ClaimTypes.Email)?.Value ?? "";
             var user = await _AuthenticationService.GetIdentityAsync(email);
-            if (controller is not null) controller.CurrentUser = user;
+            if (controller is not null)
+                controller.CurrentUser = user;
 
             await next();
         }
@@ -90,7 +91,7 @@ public class IdentityControllerBase : ControllerBase
                 return;
             }
 
-            var cannotManageRoles = !(await _AuthorizationService.CanManageRoles(user.Guid));
+            var cannotManageRoles = !await _AuthorizationService.CanManageRoles(user.Guid);
             if (cannotManageRoles)
             {
                 context.Result = new ForbidResult();

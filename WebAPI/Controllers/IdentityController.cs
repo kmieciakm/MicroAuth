@@ -4,7 +4,7 @@ using Domain.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace WebAPI.Controllers;
+namespace API.Web.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]

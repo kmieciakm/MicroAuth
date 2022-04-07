@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database.MsSQL", "Database.MsSQL\Database.MsSQL.csproj", "{A7C13EE3-96AC-408E-86B3-ADA1A4C435F0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAPI", "WebAPI\WebAPI.csproj", "{9B761944-2DBC-4C8D-8665-B0D09D11F1F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API.Web", "WebAPI\API.Web.csproj", "{9B761944-2DBC-4C8D-8665-B0D09D11F1F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Database.AzureTables", "Database.AzureTables\Database.AzureTables.csproj", "{56D66E62-974A-47E4-8544-3653247639A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Database.AzureTables", "Database.AzureTables\Database.AzureTables.csproj", "{56D66E62-974A-47E4-8544-3653247639A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
