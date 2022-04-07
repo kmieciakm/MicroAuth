@@ -24,7 +24,7 @@ public class IdentityController : ControllerBase
     public async Task<IActionResult> Validate([FromBody] string jwt)
     {
         var token = new Token(jwt);
-        var isValid = await _TokenService.ValidateTokenAsync(token);
+        var isValid = await _TokenService.ValidateSecurityTokenAsync(token);
         return Ok(isValid);
     }
 

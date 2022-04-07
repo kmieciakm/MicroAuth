@@ -1,4 +1,6 @@
 ﻿using Domain.Contracts;
+using Domain.Exceptions;
+using Domain.Infrastructure;
 using Domain.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -11,10 +13,14 @@ namespace Domain.Services;
 public class TokenService : ITokenService
 {
     private AuthenticationSettings _AuthenticationSettings { get; }
+    private IUserRegistry _UserRegistry { get; }
 
-    public TokenService(IOptions<AuthenticationSettings> authenticationSettings)
+    public TokenService(
+        IOptions<AuthenticationSettings> authenticationSettings,
+        IUserRegistry userRegistry)
     {
         _AuthenticationSettings = authenticationSettings.Value;
+        _UserRegistry = userRegistry;
     }
 
     public Token GenerateSecurityToken(Claims claims)
@@ -56,7 +62,7 @@ public class TokenService : ITokenService
         return new ClaimsIdentity(claimsList);
     }
 
-    public async Task<bool> ValidateTokenAsync(Token token)
+    public async Task<bool> ValidateSecurityTokenAsync(Token token)
     {
         byte[] secretKey = Encoding.ASCII.GetBytes(_AuthenticationSettings.Secret);
         JwtSecurityTokenHandler tokenHandler = new();
@@ -71,5 +77,16 @@ public class TokenService : ITokenService
         };
         TokenValidationResult result = await tokenHandler.ValidateTokenAsync(token.JWT, validationParams);
         return result.IsValid;
+    }
+
+    public async Task<ResetToken> GeneratePasswordResetTokenAsync(string email)
+    {
+        var token = await _UserRegistry.GeneratePasswordResetTokenAsync(email);
+        if (token is null)
+        {
+            throw new AccountException(
+                $"Cannot generate reset token. There is no account accociated with email: {email}");
+        }
+        return token.Value;
     }
 }

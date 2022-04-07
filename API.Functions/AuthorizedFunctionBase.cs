@@ -35,7 +35,7 @@ public abstract class AuthorizedFunctionBase
         }
 
         Token token = new() { JWT = jwt };
-        if (await _TokenService.ValidateTokenAsync(token))
+        if (await _TokenService.ValidateSecurityTokenAsync(token))
         {
             try
             {

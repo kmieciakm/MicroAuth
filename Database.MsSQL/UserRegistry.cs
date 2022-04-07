@@ -97,6 +97,28 @@ public class UserRegistry : IUserRegistry
         return validationResult;
     }
 
+    public async Task<ResetToken?> GeneratePasswordResetTokenAsync(string email)
+    {
+        var dbUser = await GetDbUserByEmailAsync(email);
+        if (dbUser is null)
+        {
+            return null;
+        }
+        var token = await _UserManager.GeneratePasswordResetTokenAsync(dbUser);
+        return new ResetToken(token);
+    }
+
+    public async Task<bool> ResetPassword(Guid userId, ResetToken token, string newPassword)
+    {
+        var dbUser = await GetDbUserByIdAsync(userId);
+        if (dbUser is null)
+        {
+            throw new ArgumentException($"No user with id '{userId}' found.");
+        }
+        var result = await _UserManager.ResetPasswordAsync(dbUser, token.Value, newPassword);
+        return result.Succeeded;
+    }
+
     public async Task AddToRoleAsync(Guid userId, Role role)
     {
         var dbUser = await GetDbUserByIdAsync(userId);

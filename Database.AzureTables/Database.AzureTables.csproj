@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AzureTables" Version="1.0.4" />
+    <PackageReference Include="AzureTables" Version="1.0.5" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
   </ItemGroup>
 

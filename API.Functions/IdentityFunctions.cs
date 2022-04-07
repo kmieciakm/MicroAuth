@@ -99,7 +99,7 @@ public class IdentityFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "identity/validate")] string jwt)
     {
         var token = new Token(jwt);
-        var isValid = await _TokenService.ValidateTokenAsync(token);
+        var isValid = await _TokenService.ValidateSecurityTokenAsync(token);
         return new OkObjectResult(isValid);
     }
 }
