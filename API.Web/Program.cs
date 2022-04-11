@@ -1,3 +1,4 @@
+using API.Web;
 using Database.MsSQL;
 using Domain.Contracts;
 using Domain.Exceptions;
@@ -52,10 +53,11 @@ static void ConfigureServices(WebApplicationBuilder builder)
         {
             {securityScheme, new string[] { }}
         });
+        c.OperationFilter<AddSwaggerHeadersFilter>();
     });
 
     // MS SQL Database setup *****************************************************************
-/*    var identityBuilder = builder.Services.AddIdentityCore<DbUser>(opt => {
+    var identityBuilder = builder.Services.AddIdentityCore<DbUser>(opt => {
         opt.User.RequireUniqueEmail = true;
         opt.Password.RequireDigit = true;
         opt.Password.RequireUppercase = true;
@@ -78,11 +80,11 @@ static void ConfigureServices(WebApplicationBuilder builder)
     });
 
     builder.Services.AddScoped<IUserRegistry, UserRegistry>();
-    builder.Services.AddScoped<IRoleRegistry, RoleRegistry>();*/
+    builder.Services.AddScoped<IRoleRegistry, RoleRegistry>();
     // *************************************************************************************
 
     // Azure Table Storage setup
-    builder.Services.Configure<AzureTables.AzureStorageSettings>(
+/*    builder.Services.Configure<AzureTables.AzureStorageSettings>(
         builder.Configuration.GetSection("AzureStorageSettings"));
 
     builder.Services.AddSingleton<Database.AzureTables.IUsersRolesTable, Database.AzureTables.UsersRolesTable>();
@@ -90,7 +92,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddSingleton<Database.AzureTables.IUserTable, Database.AzureTables.UsersTable>();
     builder.Services.AddSingleton<Database.AzureTables.ITokenTable, Database.AzureTables.TokenTable>();
     builder.Services.AddScoped<IUserRegistry, Database.AzureTables.UserRegistry>();
-    builder.Services.AddScoped<IRoleRegistry, Database.AzureTables.RoleRegistry>();
+    builder.Services.AddScoped<IRoleRegistry, Database.AzureTables.RoleRegistry>();*/
 
     // Settings
     builder.Services.Configure<AuthenticationSettings>(

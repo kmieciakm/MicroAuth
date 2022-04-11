@@ -47,11 +47,13 @@ public class IdentityController : ControllerBase
     }
 
     [HttpPost("register")]
+    [SwaggerHeaderParameter("API-KEY", Description = "Authorization API Key")]
     public async Task<IActionResult> Register([FromBody] SignUpRequest signUp)
     {
         try
         {
-            var user = await _AuthenticationService.SignUpAsync(signUp);
+            var registrationKey = AuthorizationHelper.GetAuthorizationApiKey(Request);
+            var user = await _AuthenticationService.SignUpAsync(signUp, registrationKey);
             return Ok(user);
         }
         catch (RegistrationException registerEx) when (registerEx.Cause == ExceptionCause.IncorrectData)

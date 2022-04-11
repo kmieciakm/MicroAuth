@@ -2,7 +2,8 @@
 
 public record AuthenticationSettings
 {
-    public bool OpenRegistration { get; set; }
+    public RegistrationMode RegistrationMode { get; set; }
+    public string? RegistrationKey { get; set; }
     public string? Issuer { get; set; }
     public string? Audience { get; set; }
     public string? Secret { get; set; }

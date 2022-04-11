@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Domain.Contracts;
 using Domain.Exceptions;
 using Domain.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -12,20 +13,19 @@ using Microsoft.OpenApi.Models;
 
 namespace API.Functions;
 
-public class IdentityFunctions
+public class IdentityFunctions : AuthorizedFunctionBase
 {
     private readonly ILogger<IdentityFunctions> _logger;
     private IAuthenticationService _AuthenticationService { get; }
-    private ITokenService _TokenService { get; }
 
     public IdentityFunctions(
         ILogger<IdentityFunctions> log,
         IAuthenticationService authenticationService,
         ITokenService tokenService)
+    :base(tokenService)
     {
         _logger = log;
         _AuthenticationService = authenticationService;
-        _TokenService = tokenService;
     }
 
     [FunctionName("Login")]
@@ -57,14 +57,17 @@ public class IdentityFunctions
     }
 
     [FunctionName("Register")]
+    [OpenApiParameter("API-KEY", In = ParameterLocation.Header, Description = "Authorization API Key")]
     [OpenApiOperation(operationId: "Register", tags: new[] { "identity" })]
     [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(SignUpCredentials), Required = true, Description = "The sign up request")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response with account information")]
     public async Task<IActionResult> Register(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "identity/register")] SignUpCredentials credentials)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "identity/register")] HttpRequest req)
     {
         try
         {
+            var registrationKey = GetAuthorizationApiKey(req);
+            var credentials = await DeserializeBodyAsync<SignUpCredentials>(req);
             SignUpRequest signUp = new()
             {
                 Firstname = credentials.Firstname,
@@ -73,7 +76,7 @@ public class IdentityFunctions
                 Password = credentials.Password,
                 ConfirmationPassword = credentials.ConfirmationPassword
             };
-            var user = await _AuthenticationService.SignUpAsync(signUp);
+            var user = await _AuthenticationService.SignUpAsync(signUp, registrationKey);
             return new OkObjectResult(user);
         }
         catch (RegistrationException registerEx) when (registerEx.Cause == ExceptionCause.IncorrectData)

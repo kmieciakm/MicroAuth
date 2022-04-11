@@ -60,7 +60,10 @@ internal class Startup : FunctionsStartup
             {
                 nameof(Boolean) => bool.Parse(configValue),
                 nameof(Int32) => int.Parse(configValue),
-                _ => configValue
+                nameof(String) => configValue,
+                _ => property.PropertyType.IsEnum
+                        ? Enum.Parse(property.PropertyType, configValue)
+                        : configValue
             };
             if (value is not null)
             {

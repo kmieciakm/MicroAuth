@@ -57,9 +57,9 @@ public class AuthenticationService : IAuthenticationService
         return _TokenService.GenerateSecurityToken(claims);
     }
 
-    public async Task<User> SignUpAsync(SignUpRequest signUp)
+    public async Task<User> SignUpAsync(SignUpRequest signUp, string? key = null)
     {
-        EnsureOpenRegistration();
+        EnsureAuthorizedRegistration(key);
 
         if (!Validator.IsValidEmail(signUp.Email))
         {
@@ -110,14 +110,24 @@ public class AuthenticationService : IAuthenticationService
         return await _UserRepository.GetAsync(signUp.Email);
     }
 
-    private void EnsureOpenRegistration()
+    private void EnsureAuthorizedRegistration(string? key)
     {
-        var isOpen = _AuthenticationSettings.OpenRegistration;
-        if (!isOpen)
+        var mode = _AuthenticationSettings.RegistrationMode;
+        switch (mode)
         {
-            throw new RegistrationException(
-                "The registration is prohibited.",
-                ExceptionCause.SystemConfiguration);
+            case RegistrationMode.PUBLIC:
+                break;
+            case RegistrationMode.KEY_BASED:
+                if (key != _AuthenticationSettings.RegistrationKey)
+                {
+                    goto case RegistrationMode.BLOCKED;
+                }
+                break;
+            case RegistrationMode.BLOCKED:
+            default:
+                throw new RegistrationException(
+                    "The registration is prohibited.",
+                    ExceptionCause.SystemConfiguration);
         }
     }
 }
