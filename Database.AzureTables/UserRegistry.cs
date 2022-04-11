@@ -62,6 +62,7 @@ public class UserRegistry : IUserRegistry
 
     public async Task DeleteAsync(Guid id)
     {
+        // TODO: Clear other tables e.g. user in roles
         var dbUser = await _UserTable.GetAsync(id);
         _UserTable.Delete(dbUser);
         await _UserTable.CommitAsync();
@@ -129,9 +130,9 @@ public class UserRegistry : IUserRegistry
         return Task.FromResult(validationResult);
     }
 
-    public async Task<ResetToken?> GeneratePasswordResetTokenAsync(string email)
+    public async Task<ResetToken?> GeneratePasswordResetTokenAsync(Guid userId)
     {
-        var user = await GetAsync(email);
+        var user = await GetAsync(userId);
         if (user is not null)
         {
             var token = TokenHelper.GenerateToken();

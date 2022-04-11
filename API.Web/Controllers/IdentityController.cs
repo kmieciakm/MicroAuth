@@ -11,13 +11,16 @@ public class IdentityController : ControllerBase
 {
     private ITokenService _TokenService { get; }
     private IAuthenticationService _AuthenticationService { get; }
+    private IAccountService _AccountService { get; }
 
     public IdentityController(
         ITokenService tokenService,
-        IAuthenticationService authenticationService)
+        IAuthenticationService authenticationService,
+        IAccountService accountService)
     {
         _TokenService = tokenService;
         _AuthenticationService = authenticationService;
+        _AccountService = accountService;
     }
 
     [HttpPost("validate")]

@@ -5,6 +5,7 @@ using Domain.Exceptions;
 using Domain.Infrastructure;
 using Domain.Models;
 using Domain.Services;
+using Mailing.Queue;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -85,7 +86,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
 
     // Azure Table Storage setup
 /*    builder.Services.Configure<AzureTables.AzureStorageSettings>(
-        builder.Configuration.GetSection("AzureStorageSettings"));
+    builder.Configuration.GetSection("AzureStorageSettings"));
 
     builder.Services.AddSingleton<Database.AzureTables.IUsersRolesTable, Database.AzureTables.UsersRolesTable>();
     builder.Services.AddSingleton<Database.AzureTables.IRoleTable, Database.AzureTables.RolesTable>();
@@ -95,6 +96,8 @@ static void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IRoleRegistry, Database.AzureTables.RoleRegistry>();*/
 
     // Settings
+    builder.Services.Configure<ServiceBusSettings>(
+        builder.Configuration.GetSection("ServiceBusSettings"));
     builder.Services.Configure<AuthenticationSettings>(
         builder.Configuration.GetSection("AuthenticationSettings"));
     builder.Services.Configure<AuthorizationSettings>(
@@ -105,6 +108,7 @@ static void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+    builder.Services.AddScoped<IMailingService, ServiceBusMailingService>();
 
     // Authentication
     builder.Services.AddAuthorization();

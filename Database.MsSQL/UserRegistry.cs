@@ -97,9 +97,9 @@ public class UserRegistry : IUserRegistry
         return validationResult;
     }
 
-    public async Task<ResetToken?> GeneratePasswordResetTokenAsync(string email)
+    public async Task<ResetToken?> GeneratePasswordResetTokenAsync(Guid userId)
     {
-        var dbUser = await GetDbUserByEmailAsync(email);
+        var dbUser = await GetDbUserByIdAsync(userId);
         if (dbUser is null)
         {
             return null;

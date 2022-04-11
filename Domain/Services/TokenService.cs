@@ -81,12 +81,13 @@ public class TokenService : ITokenService
 
     public async Task<ResetToken> GeneratePasswordResetTokenAsync(string email)
     {
-        var token = await _UserRegistry.GeneratePasswordResetTokenAsync(email);
-        if (token is null)
+        var user = await _UserRegistry.GetAsync(email);
+        if (user is null)
         {
             throw new AccountException(
                 $"Cannot generate reset token. There is no account accociated with email: {email}");
         }
+        var token = await _UserRegistry.GeneratePasswordResetTokenAsync(user.Guid);
         return token.Value;
     }
 }
