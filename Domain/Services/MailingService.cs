@@ -33,7 +33,7 @@ public class MailingService : IMailingService
     public async Task SendResetPasswordEmailAsync(string address, ResetToken resetToken)
     {
         var resetUrl = string.Format(_ResetPasswordEmailSettings.ResetPasswordUrl, resetToken.Value);
-        var emailPath = $"{EMAIL_TEMPLATES_DIR}{_ResetPasswordEmailSettings.ResetPasswordTemplate}";
+        var emailPath = ExtractEmailPath();
         var emailTemplate = File.ReadAllText(emailPath);
         var emailMessage = string.Format(emailTemplate, _ResetPasswordEmailSettings.ApplicationName, resetUrl);
         var emailSubject = $"{_ResetPasswordEmailSettings.ApplicationName} - Password Reset";
@@ -45,5 +45,13 @@ public class MailingService : IMailingService
             Message = emailMessage
         };
         await _MailSender.SendEmailAsync(email);
+    }
+
+    private string ExtractEmailPath()
+    {
+        var path = Path.IsPathRooted(_ResetPasswordEmailSettings.ResetPasswordTemplate)
+            ? _ResetPasswordEmailSettings.ResetPasswordTemplate
+            : $"{EMAIL_TEMPLATES_DIR}{_ResetPasswordEmailSettings.ResetPasswordTemplate}";
+        return path;
     }
 }
