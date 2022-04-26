@@ -96,6 +96,8 @@ static void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IRoleRegistry, Database.AzureTables.RoleRegistry>();*/
 
     // Settings
+    builder.Services.Configure<ResetPasswordEmailSettings>(
+        builder.Configuration.GetSection("ResetPasswordEmailSettings"));
     builder.Services.Configure<ServiceBusSettings>(
         builder.Configuration.GetSection("ServiceBusSettings"));
     builder.Services.Configure<AuthenticationSettings>(
@@ -108,7 +110,8 @@ static void ConfigureServices(WebApplicationBuilder builder)
     builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
     builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
-    builder.Services.AddScoped<IMailingService, ServiceBusMailingService>();
+    builder.Services.AddScoped<IMailingService, MailingService>();
+    builder.Services.AddScoped<IMailSender, ServiceBusMailingService>();
 
     // Authentication
     builder.Services.AddAuthorization();

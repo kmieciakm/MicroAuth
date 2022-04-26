@@ -68,4 +68,50 @@ public class IdentityController : ControllerBase
             return Unauthorized();
         }
     }
+
+    [HttpPost("forgotpassword")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        try
+        {
+            var user = await _AuthenticationService.GetIdentityAsync(request.Email);
+            if (user is null)
+            {
+                return BadRequest();
+            }
+            await _AccountService.RequestPasswordReset(user.Guid);
+            return Ok(new { message = "Reset link sent successfully" });
+        }
+        catch (AccountException accountExc) when (accountExc.Cause == ExceptionCause.IncorrectData)
+        {
+            return BadRequest(accountExc.Message);
+        }
+        catch (AccountException accountExc) when (accountExc.Cause == ExceptionCause.Unknown)
+        {
+            return Problem(statusCode: 500, detail: accountExc.Message);
+        }
+    }
+
+    [HttpPost("resetpassword")]
+    public async Task<IActionResult> ResetPassword([FromBody] ChangePasswordRequest request)
+    {
+        try
+        {
+            var user = await _AuthenticationService.GetIdentityAsync(request.Email);
+            if (user is null)
+            {
+                return BadRequest();
+            }
+            await _AccountService.ResetPassword(user.Guid, new ResetToken(request.Token), request.NewPassword);
+            return Ok(new { message = "Password changed successfully" });
+        }
+        catch (AccountException accountExc) when (accountExc.Cause == ExceptionCause.IncorrectData)
+        {
+            return BadRequest(accountExc.Message);
+        }
+        catch (AccountException accountExc) when (accountExc.Cause == ExceptionCause.Unknown)
+        {
+            return Problem(statusCode: 500, detail: accountExc.Message);
+        }
+    }
 }

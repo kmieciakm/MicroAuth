@@ -17,15 +17,18 @@ public class IdentityFunctions : AuthorizedFunctionBase
 {
     private readonly ILogger<IdentityFunctions> _logger;
     private IAuthenticationService _AuthenticationService { get; }
+    private IAccountService _AccountService { get; }
 
     public IdentityFunctions(
         ILogger<IdentityFunctions> log,
         IAuthenticationService authenticationService,
+        IAccountService accountService,
         ITokenService tokenService)
     :base(tokenService)
     {
         _logger = log;
         _AuthenticationService = authenticationService;
+        _AccountService = accountService;
     }
 
     [FunctionName("Login")]
@@ -104,6 +107,62 @@ public class IdentityFunctions : AuthorizedFunctionBase
         var token = new Token(jwt);
         var isValid = await _TokenService.ValidateSecurityTokenAsync(token);
         return new OkObjectResult(isValid);
+    }
+
+    [FunctionName("ForgotPassword")]
+    [OpenApiOperation(operationId: "ForgotPassword", tags: new[] { "identity" })]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(ForgotPasswordRequest), Required = true, Description = "Request with account email")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
+    public async Task<IActionResult> ForgotPassword(
+         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "identity/forgotpassword")] ForgotPasswordRequest request)
+    {
+        try
+        {
+            var user = await _AuthenticationService.GetIdentityAsync(request.Email);
+            if (user is null)
+            {
+                return new BadRequestResult();
+            }
+            await _AccountService.RequestPasswordReset(user.Guid);
+            return new OkObjectResult(new { message = "Reset link sent successfully" });
+        }
+        catch (AccountException accountExc) when (accountExc.Cause == ExceptionCause.IncorrectData)
+        {
+            return new BadRequestObjectResult(new { accountExc.Message, accountExc.Details });
+        }
+        catch (AccountException accountExc) when (accountExc.Cause == ExceptionCause.Unknown)
+        {
+            _logger.LogError(accountExc, "Request password request failed to send.");
+            return new DetailedStatusCodeResult(500, accountExc.Message);
+        }
+    }
+
+    [FunctionName("ResetPassword")]
+    [OpenApiOperation(operationId: "ResetPassword", tags: new[] { "identity" })]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(ChangePasswordRequest), Required = true, Description = "Request with new password")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/plain", bodyType: typeof(string), Description = "The OK response")]
+    public async Task<IActionResult> ResetPassword(
+         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "identity/resetpassword")] ChangePasswordRequest request)
+    {
+        try
+        {
+            var user = await _AuthenticationService.GetIdentityAsync(request.Email);
+            if (user is null)
+            {
+                return new BadRequestResult();
+            }
+            await _AccountService.ResetPassword(user.Guid, new ResetToken(request.Token), request.NewPassword);
+            return new OkObjectResult(new { message = "Password changed successfully" });
+        }
+        catch (AccountException accountExc) when (accountExc.Cause == ExceptionCause.IncorrectData)
+        {
+            return new BadRequestObjectResult(new { accountExc.Message, accountExc.Details });
+        }
+        catch (AccountException accountExc) when (accountExc.Cause == ExceptionCause.Unknown)
+        {
+            _logger.LogError(accountExc, "Reset password failed.");
+            return new DetailedStatusCodeResult(500, accountExc.Message);
+        }
     }
 }
 

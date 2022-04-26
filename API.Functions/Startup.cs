@@ -5,6 +5,7 @@ using Domain.Contracts;
 using Domain.Infrastructure;
 using Domain.Models;
 using Domain.Services;
+using Mailing.Queue;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,7 @@ internal class Startup : FunctionsStartup
         builder.Services.AddSingleton<IUsersRolesTable, UsersRolesTable>();
         builder.Services.AddSingleton<IRoleTable, RolesTable>();
         builder.Services.AddSingleton<IUserTable, UsersTable>();
+        builder.Services.AddSingleton<ITokenTable, TokenTable>();
         builder.Services.AddScoped<IUserRegistry, UserRegistry>();
         builder.Services.AddScoped<IRoleRegistry, RoleRegistry>();
 
@@ -35,10 +37,17 @@ internal class Startup : FunctionsStartup
             .Configure<IConfiguration>((authSettings, configuration) => {
                 BindConfiguration(authSettings, configuration);
             });
-
         builder.Services.AddOptions<AuthorizationSettings>()
             .Configure<IConfiguration>((authSettings, configuration) => {
                 BindConfiguration(authSettings, configuration);
+            });
+        builder.Services.AddOptions<ResetPasswordEmailSettings>()
+            .Configure<IConfiguration>((resetEmailSettings, configuration) => {
+                BindConfiguration(resetEmailSettings, configuration);
+            });
+        builder.Services.AddOptions<ServiceBusSettings>()
+            .Configure<IConfiguration>((busSettings, configuration) => {
+                BindConfiguration(busSettings, configuration);
             });
 
         // Domain services
@@ -46,6 +55,8 @@ internal class Startup : FunctionsStartup
         builder.Services.AddScoped<IAccountService, AccountService>();
         builder.Services.AddScoped<IAuthorizationService, AuthorizationService>();
         builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+        builder.Services.AddScoped<IMailingService, MailingService>();
+        builder.Services.AddScoped<IMailSender, ServiceBusMailingService>();
     }
 
     private T BindConfiguration<T>(T option, IConfiguration configuration) where T : class, new()

@@ -9,6 +9,11 @@
     "AuthenticationSettings_Audience": "TestAudience",
     "AuthenticationSettings_Secret": null, // Add in User Secrets
     "AuthenticationSettings_ExpirationHours": 1,
-    "AzureStorageSettings_ConnectionString": null // Add in User Secrets
+    "AzureStorageSettings_ConnectionString": null, // Add in User Secrets
+    "ServiceBusSettings_ConnectionString": null, // Add in User Secrets
+    "ServiceBusSettings_MailingQueueName": "emails",
+    "ResetPasswordEmailSettings_ApplicationName": "MicroAuth",
+    "ResetPasswordEmailSettings_ResetPasswordUrl": "http://localhost:4200/reset-password?token={0}",
+    "ResetPasswordEmailSettings_ResetPasswordTemplate": "reset_password.html"
   }
 }

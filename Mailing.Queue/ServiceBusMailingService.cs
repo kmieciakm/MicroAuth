@@ -2,16 +2,11 @@
 using Domain.Infrastructure;
 using Domain.Models;
 using Microsoft.Extensions.Options;
+using System.Text.Json;
 
 namespace Mailing.Queue;
 
-public class ServiceBusSettings
-{
-    public string ConnectionString { get; set; }
-    public string MailingQueueName { get; set; }
-}
-
-public class ServiceBusMailingService : IMailingService
+public class ServiceBusMailingService : IMailSender
 {
     public ServiceBusSettings _QueueSettings { get; set; }
 
@@ -20,15 +15,15 @@ public class ServiceBusMailingService : IMailingService
         _QueueSettings = queueOptions.Value;
     }
 
-    public async Task SendResetPasswordEmailAsync(string email, ResetToken resetToken)
+    public async Task SendEmailAsync(Email email)
     {
         var client = new ServiceBusClient(_QueueSettings.ConnectionString);
         var sender = client.CreateSender(_QueueSettings.MailingQueueName);
 
         using ServiceBusMessageBatch messageBatch = await sender.CreateMessageBatchAsync();
 
-        // TODO: create email from template
-        if (!messageBatch.TryAddMessage(new ServiceBusMessage($"{{ 'to': '', 'subject': 'Reset Password', 'message': '{resetToken.Value}'}}")))
+        var body = JsonSerializer.Serialize(email);
+        if (!messageBatch.TryAddMessage(new ServiceBusMessage(body)))
         {
             throw new Exception($"The message is too large to fit in the batch.");
         }
